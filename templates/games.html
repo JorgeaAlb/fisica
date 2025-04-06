@@ -25,13 +25,12 @@
             </div>
         </div>
         
-        <!-- Juego 3: Balanza con pesos variables -->
         <div class="game-card">
-            <img src="{{ url_for('static', filename='images/balanza2.png') }}" alt="Balanza con pesos variables">
+            <img src="{{ url_for('static', filename='images/balanza2.png') }}" alt="Balanza de piso">
             <div class="game-card-content">
-                <h3>Desafío de Pesos</h3>
-                <p>Selecciona los pesos correctos para equilibrar la balanza con un peso fijo en el otro extremo.</p>
-                <a href="{{ url_for('game', game_id='weight-challenge') }}" class="play-btn">Jugar</a>
+                <h3>Balanza de Piso</h3>
+                <p>Arrastra objetos para equilibrar la balanza contra pesos predeterminados.</p>
+                <a href="{{ url_for('balanza') }}" class="play-btn">Jugar</a>
             </div>
         </div>
     </div>

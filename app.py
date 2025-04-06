@@ -16,11 +16,15 @@ def calculator():
 
 @app.route('/game/<game_id>')
 def game(game_id):
-    return render_template('game.html', game_id=game_id)
+    return render_template('games/physics_quiz.html', game_id=game_id)
 
 @app.route('/games/balance-beam')
 def balance_beam():
     return render_template('games/balance_beam.html')
+
+@app.route('/games/balanza')
+def balanza():
+    return render_template('games/balanza.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
