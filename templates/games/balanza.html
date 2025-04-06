@@ -6,7 +6,7 @@
     
     <div class="game-container">
         <h1>Balanza de Piso</h1>
-        <p class="instructions">Arrastra los objetos para equilibrar los pesos</p>
+        <p class="instructions">Arrastra los objetos rojos al lado derecho para equilibrar la balanza</p>
         
         <div class="balance-apparatus">
             <div class="balance-base"></div>
@@ -16,13 +16,15 @@
             <div class="balance-sides">
                 <div class="balance-side left-side">
                     <div class="side-label">Lado Fijo: <span id="leftTotal">10</span></div>
-                    <div class="weight fixed" data-value="6">6</div>
-                    <div class="weight fixed" data-value="4">4</div>
+                    <div class="fixed-weights">
+                        <div class="weight fixed" data-value="6">6</div>
+                        <div class="weight fixed" data-value="4">4</div>
+                    </div>
                 </div>
                 
                 <div class="balance-side right-side">
                     <div class="side-label">Tu lado: <span id="rightTotal">0</span></div>
-                    <div id="rightWeights"></div>
+                    <div class="weights-container" id="rightWeights"></div>
                 </div>
             </div>
         </div>
@@ -94,7 +96,7 @@
     }
     
     .instructions {
-        color: var(--color-gray);
+        color: black;
         font-size: 16px;
         text-align: center;
         margin-bottom: 25px;
@@ -163,21 +165,41 @@
         font-size: 18px;
     }
     
+    .fixed-weights,
+    .weights-container {
+        min-height: 80px;
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border: 2px dashed var(--color-light);
+        border-radius: 8px;
+        transition: background-color 0.3s;
+    }
+    
+    .weights-container.highlight {
+        background-color: rgba(52, 152, 219, 0.1);
+        border-color: var(--color-primary);
+    }
+    
     .weight {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-weight: bold;
-        font-size: 20px;
+        font-size: 18px;
         cursor: grab;
-        margin: 8px 0;
         user-select: none;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         transition: transform 0.2s, box-shadow 0.2s;
+        flex-shrink: 0;
     }
     
     .weight:active {
@@ -196,6 +218,11 @@
     .weight.movable:hover {
         transform: translateY(-3px);
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .weight.dragging {
+        opacity: 0.7;
+        transform: scale(1.05);
     }
     
     .weight-pool {
@@ -331,7 +358,11 @@
         
         // Inicializar el juego
         function initGame() {
-            // Configurar pesos fijos
+            // Reiniciar totales
+            rightTotal = 0;
+            leftTotal = fixedWeights.reduce((a, b) => a + b, 0);
+            
+            // Actualizar displays
             leftTotalDisplay.textContent = leftTotal;
             rightTotalDisplay.textContent = rightTotal;
             
@@ -341,11 +372,7 @@
             // Reponer pesos movibles
             weightPool.innerHTML = '';
             movableWeights.forEach(weight => {
-                const weightElement = document.createElement('div');
-                weightElement.className = 'weight movable';
-                weightElement.textContent = weight;
-                weightElement.setAttribute('data-value', weight);
-                weightElement.setAttribute('draggable', 'true');
+                const weightElement = createWeightElement(weight);
                 weightPool.appendChild(weightElement);
             });
             
@@ -353,9 +380,21 @@
             messageDisplay.style.display = 'none';
             messageDisplay.className = 'game-feedback';
             
+            // Restablecer balance
+            balanceBeam.style.transform = 'rotate(0deg)';
+            
             // Configurar eventos
             setupDragAndDrop();
-            updateBalance();
+        }
+        
+        // Crear elemento de peso
+        function createWeightElement(value) {
+            const weightElement = document.createElement('div');
+            weightElement.className = 'weight movable';
+            weightElement.textContent = value;
+            weightElement.setAttribute('data-value', value);
+            weightElement.setAttribute('draggable', 'true');
+            return weightElement;
         }
         
         // Actualizar la inclinación de la balanza
@@ -372,7 +411,7 @@
                 showFeedback('¡Perfectamente equilibrado!', true);
             } else {
                 const direction = rightTotal < leftTotal ? 'derecha' : 'izquierda';
-                showFeedback(`Mueve más peso al lado ${direction}`, false);
+                showFeedback(`Necesitas más peso al lado ${direction}`, false);
             }
         }
         
@@ -387,50 +426,74 @@
         
         // Configurar arrastrar y soltar
         function setupDragAndDrop() {
-            const movableWeights = document.querySelectorAll('.weight.movable');
-            
-            movableWeights.forEach(weight => {
-                weight.addEventListener('dragstart', function(e) {
-                    draggedWeight = this;
-                    setTimeout(() => {
-                        this.style.opacity = '0.5';
-                    }, 0);
-                });
-                
-                weight.addEventListener('dragend', function() {
-                    this.style.opacity = '1';
-                });
+            // Eventos para los pesos movibles
+            document.querySelectorAll('.weight.movable').forEach(weight => {
+                weight.addEventListener('dragstart', handleDragStart);
+                weight.addEventListener('dragend', handleDragEnd);
             });
             
-            // Soltar en el lado derecho
-            rightWeightsContainer.addEventListener('dragover', function(e) {
-                e.preventDefault();
-            });
+            // Área de destino (lado derecho)
+            rightWeightsContainer.addEventListener('dragover', handleDragOver);
+            rightWeightsContainer.addEventListener('dragenter', handleDragEnter);
+            rightWeightsContainer.addEventListener('dragleave', handleDragLeave);
+            rightWeightsContainer.addEventListener('drop', handleDropRight);
             
-            rightWeightsContainer.addEventListener('drop', function(e) {
-                e.preventDefault();
-                if (draggedWeight && draggedWeight.parentElement === weightPool) {
-                    const value = parseInt(draggedWeight.getAttribute('data-value'));
-                    rightTotal += value;
-                    this.appendChild(draggedWeight);
-                    updateBalance();
-                }
-            });
+            // Área de origen (pool de pesos)
+            weightPool.addEventListener('dragover', handleDragOver);
+            weightPool.addEventListener('drop', handleDropPool);
+        }
+        
+        function handleDragStart(e) {
+            draggedWeight = this;
+            this.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', this.getAttribute('data-value'));
+            setTimeout(() => {
+                this.style.opacity = '0.5';
+            }, 0);
+        }
+        
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            this.style.opacity = '1';
+            rightWeightsContainer.classList.remove('highlight');
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+        
+        function handleDragEnter(e) {
+            e.preventDefault();
+            if (draggedWeight && draggedWeight.parentElement === weightPool) {
+                this.classList.add('highlight');
+            }
+        }
+        
+        function handleDragLeave() {
+            this.classList.remove('highlight');
+        }
+        
+        function handleDropRight(e) {
+            e.preventDefault();
+            this.classList.remove('highlight');
             
-            // Devolver al área de pesos
-            weightPool.addEventListener('dragover', function(e) {
-                e.preventDefault();
-            });
+            if (draggedWeight && draggedWeight.parentElement === weightPool) {
+                const value = parseInt(draggedWeight.getAttribute('data-value'));
+                rightTotal += value;
+                this.appendChild(draggedWeight);
+                updateBalance();
+            }
+        }
+        
+        function handleDropPool(e) {
+            e.preventDefault();
             
-            weightPool.addEventListener('drop', function(e) {
-                e.preventDefault();
-                if (draggedWeight && draggedWeight.parentElement === rightWeightsContainer) {
-                    const value = parseInt(draggedWeight.getAttribute('data-value'));
-                    rightTotal -= value;
-                    this.appendChild(draggedWeight);
-                    updateBalance();
-                }
-            });
+            if (draggedWeight && draggedWeight.parentElement === rightWeightsContainer) {
+                const value = parseInt(draggedWeight.getAttribute('data-value'));
+                rightTotal -= value;
+                this.appendChild(draggedWeight);
+                updateBalance();
+            }
         }
         
         // Event listeners

@@ -15,6 +15,15 @@
             </div>
         </div>
         
+        <div class="game-card">
+            <img src="{{ url_for('static', filename='images/balanza2.png') }}" alt="Balanza de piso">
+            <div class="game-card-content">
+                <h3>Balanza de Piso</h3>
+                <p>Arrastra objetos para equilibrar la balanza contra pesos predeterminados.</p>
+                <a href="{{ url_for('balanza') }}" class="play-btn">Jugar</a>
+            </div>
+        </div>
+
         <!-- Juego 2: Balanza con pesos fijos -->
         <div class="game-card">
             <img src="{{ url_for('static', filename='images/balanza.png') }}" alt="Balanza con pesos fijos">
@@ -24,15 +33,7 @@
                 <a href="{{ url_for('balance_beam') }}" class="play-btn">Jugar</a>
             </div>
         </div>
-        
-        <div class="game-card">
-            <img src="{{ url_for('static', filename='images/balanza2.png') }}" alt="Balanza de piso">
-            <div class="game-card-content">
-                <h3>Balanza de Piso</h3>
-                <p>Arrastra objetos para equilibrar la balanza contra pesos predeterminados.</p>
-                <a href="{{ url_for('balanza') }}" class="play-btn">Jugar</a>
-            </div>
-        </div>
+         
     </div>
 </div>
 {% endblock %}
