@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Mini Juegos de Física</h1>
+    
+    <div class="games-grid">
+        <!-- Juego 1: Quiz de Física -->
+        <div class="game-card">
+            <img src="{{ url_for('static', filename='images/quiz.png') }}" alt="Quiz de Física">
+            <div class="game-card-content">
+                <h3>Quiz de Física</h3>
+                <p>Pon a prueba tus conocimientos con este cuestionario interactivo sobre conceptos fundamentales de física.</p>
+                <a href="{{ url_for('game', game_id='physics-quiz') }}" class="play-btn">Jugar</a>
+            </div>
+        </div>
+        
+        <!-- Juego 2: Balanza con pesos fijos -->
+        <div class="game-card">
+            <img src="{{ url_for('static', filename='images/balanza.png') }}" alt="Balanza con pesos fijos">
+            <div class="game-card-content">
+                <h3>Balanza Equilibrada</h3>
+                <p>Equilibra la balanza moviendo el punto de apoyo con pesos fijos en cada extremo.</p>
+                <a href="{{ url_for('balance_beam') }}" class="play-btn">Jugar</a>
+            </div>
+        </div>
+        
+        <!-- Juego 3: Balanza con pesos variables -->
+        <div class="game-card">
+            <img src="{{ url_for('static', filename='images/balanza2.png') }}" alt="Balanza con pesos variables">
+            <div class="game-card-content">
+                <h3>Desafío de Pesos</h3>
+                <p>Selecciona los pesos correctos para equilibrar la balanza con un peso fijo en el otro extremo.</p>
+                <a href="{{ url_for('game', game_id='weight-challenge') }}" class="play-btn">Jugar</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

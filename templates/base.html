@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Física Interactiva{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Font Awesome para el icono de hamburguesa -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    {% if not home_page %}
+    <header>
+        <div class="header-container">
+            <a href="{{ url_for('home') }}" class="logo">Física Interactiva</a>
+            <button class="hamburger-btn" aria-label="Menú">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Inicio</a></li>
+                    <li><a href="{{ url_for('games') }}">Mini Juegos</a></li>
+                    <li><a href="{{ url_for('calculator') }}">Calculadora</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    {% endif %}
+    {% block content %}{% endblock %}
+    
+    <footer>
+        <div class="footer-content">
+            <p>© 2025 Física Interactiva - Creado por Jorge Alberto</p>
+            <p>Todos los derechos reservados</p>
+        </div>
+    </footer> 
+
+    <script>
+        // Funciones de cálculo
+        function calculateVelocity() {
+            const distance = parseFloat(document.getElementById('distance').value);
+            const time = parseFloat(document.getElementById('time').value);
+            
+            if (isNaN(distance) || isNaN(time) || time === 0) {
+                document.getElementById('velocity-result').textContent = 'Por favor ingrese valores válidos';
+                return;
+            }
+            
+            const velocity = distance / time;
+            document.getElementById('velocity-result').textContent = `Velocidad = ${velocity.toFixed(2)} m/s`;
+        }
+        
+        function calculateForce() {
+            const mass = parseFloat(document.getElementById('mass').value);
+            const acceleration = parseFloat(document.getElementById('acceleration').value);
+            
+            if (isNaN(mass) || isNaN(acceleration)) {
+                document.getElementById('force-result').textContent = 'Por favor ingrese valores válidos';
+                return;
+            }
+            
+            const force = mass * acceleration;
+            document.getElementById('force-result').textContent = `Fuerza = ${force.toFixed(2)} N`;
+        }
+        
+        // Configurar la calculadora
+        function setupCalculator() {
+            const formulaSelect = document.getElementById('formula');
+            const formulaInputs = document.querySelectorAll('.formula-inputs');
+            
+            formulaSelect.addEventListener('change', function() {
+                // Ocultar todos los inputs primero
+                formulaInputs.forEach(input => {
+                    input.style.display = 'none';
+                });
+                
+                // Mostrar los inputs correspondientes
+                document.getElementById(this.value + '-inputs').style.display = 'block';
+            });
+        }
+        
+        // Funciones para cargar los juegos (simplificadas)
+        function loadPhysicsQuiz() {
+            document.getElementById('quiz-container').innerHTML = `
+                <div style="background-color: white; padding: 2rem; border-radius: 10px;">
+                    <h3 style="margin-bottom: 1rem;">Quiz de Física</h3>
+                    <div id="quiz-questions"></div>
+                    <button onclick="startQuiz()" style="margin-top: 1rem; padding: 0.5rem 1rem; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Comenzar Quiz
+                    </button>
+                </div>
+            `;
+        }
+        
+        function loadBalanceBeamGame() {
+            document.getElementById('balance-game-container').innerHTML = `
+                <div style="background-color: white; padding: 2rem; border-radius: 10px;">
+                    <h3 style="margin-bottom: 1rem;">Balanza Equilibrada</h3>
+                    <div style="position: relative; height: 200px; margin: 2rem 0;">
+                        <!-- Aquí iría el juego de la balanza con pesos fijos -->
+                        <div style="position: absolute; width: 300px; height: 20px; background-color: #aaa; top: 50px; left: 50%; transform: translateX(-50%);"></div>
+                        <div style="position: absolute; width: 4px; height: 50px; background-color: #555; top: 0; left: 50%; transform: translateX(-50%);"></div>
+                        <div style="position: absolute; width: 30px; height: 30px; background-color: #e74c3c; border-radius: 50%; top: 100px; left: calc(50% - 150px); transform: translateX(-50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold;">5</div>
+                        <div style="position: absolute; width: 30px; height: 30px; background-color: #2ecc71; border-radius: 50%; top: 100px; left: calc(50% + 150px); transform: translateX(-50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold;">3</div>
+                    </div>
+                    <p>Mueve el punto de apoyo para equilibrar la balanza</p>
+                </div>
+            `;
+        }
+        
+        function loadWeightChallengeGame() {
+            document.getElementById('weight-game-container').innerHTML = `
+                <div style="background-color: white; padding: 2rem; border-radius: 10px;">
+                    <h3 style="margin-bottom: 1rem;">Desafío de Pesos</h3>
+                    <div style="position: relative; height: 200px; margin: 2rem 0;">
+                        <!-- Aquí iría el juego de la balanza con pesos variables -->
+                        <div style="position: absolute; width: 300px; height: 20px; background-color: #aaa; top: 50px; left: 50%; transform: translateX(-50%);"></div>
+                        <div style="position: absolute; width: 4px; height: 50px; background-color: #555; top: 0; left: 50%; transform: translateX(-50%);"></div>
+                        <div style="position: absolute; width: 40px; height: 40px; background-color: #e74c3c; border-radius: 50%; top: 100px; left: calc(50% - 150px); transform: translateX(-50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold;">7</div>
+                        <div style="position: absolute; top: 120px; left: calc(50% + 120px);">
+                            <select style="padding: 0.5rem;">
+                                <option value="1">1 kg</option>
+                                <option value="2">2 kg</option>
+                                <option value="3">3 kg</option>
+                                <option value="4">4 kg</option>
+                                <option value="5">5 kg</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p>Selecciona el peso correcto para equilibrar la balanza</p>
+                </div>
+            `;
+        }
+        
+        // Inicializar la calculadora si está en la página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('formula')) {
+                setupCalculator();
+            }
+        });
+    </script>
+    <script>
+        // Menú hamburguesa
+        document.querySelector('.hamburger-btn').addEventListener('click', function() {
+            document.querySelector('nav ul').classList.toggle('active');
+        });
+        
+        // Cerrar menú al hacer clic en enlaces (solo en móvil)
+        document.querySelectorAll('nav ul li a').forEach(item => {
+            item.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    document.querySelector('nav ul').classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

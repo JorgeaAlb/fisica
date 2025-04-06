@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Calculadora de Fórmulas Físicas</h1>
+    
+    <div class="calculator">
+        <div class="formula-selector">
+            <label for="formula">Selecciona una fórmula:</label>
+            <select id="formula" onchange="showSelectedFormula()">
+                <option value="rapidez">Rapidez (v = d/t)</option>
+                <option value="velocidad">Velocidad (v = Δx/Δt)</option>
+                <option value="aceleracion">Aceleración (a = Δv/Δt)</option>
+                <option value="fuerza">Fuerza (F = m·a)</option>
+                <option value="masa">Masa (m = F/a)</option>
+                <option value="peso">Peso (P = m·g)</option>
+                <option value="densidad">Densidad (ρ = m/V)</option>
+                <option value="presion">Presión (P = F/A)</option>
+                <option value="presion-hidrostatica">Presión Hidrostática (P = ρ·g·h)</option>
+            </select>
+        </div>
+        
+        <!-- Rapidez -->
+        <div id="rapidez-inputs" class="formula-inputs">
+            <div class="input-group">
+                <label for="distancia">Distancia (metros):</label>
+                <input type="number" id="distancia" placeholder="Ingrese la distancia">
+            </div>
+            <div class="input-group">
+                <label for="tiempo-rapidez">Tiempo (segundos):</label>
+                <input type="number" id="tiempo-rapidez" placeholder="Ingrese el tiempo">
+            </div>
+            <button class="calculate-btn" onclick="calculateRapidez()">Calcular Rapidez</button>
+            <div id="rapidez-result" class="result"></div>
+        </div>
+        
+        <!-- Velocidad -->
+        <div id="velocidad-inputs" class="formula-inputs" style="display: none;">
+            <div class="input-group">
+                <label for="desplazamiento">Desplazamiento (metros):</label>
+                <input type="number" id="desplazamiento" placeholder="Ingrese el desplazamiento">
+            </div>
+            <div class="input-group">
+                <label for="tiempo-velocidad">Intervalo de tiempo (segundos):</label>
+                <input type="number" id="tiempo-velocidad" placeholder="Ingrese el tiempo">
+            </div>
+            <button class="calculate-btn" onclick="calculateVelocidad()">Calcular Velocidad</button>
+            <div id="velocidad-result" class="result"></div>
+        </div>
+        
+        <!-- Aceleración -->
+        <div id="aceleracion-inputs" class="formula-inputs" style="display: none;">
+            <div class="input-group">
+                <label for="cambio-velocidad">Cambio de velocidad (m/s):</label>
+                <input type="number" id="cambio-velocidad" placeholder="Ingrese Δv">
+            </div>
+            <div class="input-group">
+                <label for="tiempo-aceleracion">Intervalo de tiempo (segundos):</label>
+                <input type="number" id="tiempo-aceleracion" placeholder="Ingrese Δt">
+            </div>
+            <button class="calculate-btn" onclick="calculateAceleracion()">Calcular Aceleración</button>
+            <div id="aceleracion-result" class="result"></div>
+        </div>
+        
+        <!-- Fuerza -->
+        <div id="fuerza-inputs" class="formula-inputs" style="display: none;">
+            <div class="input-group">
+                <label for="masa-fuerza">Masa (kg):</label>
+                <input type="number" id="masa-fuerza" placeholder="Ingrese la masa">
+            </div>
+            <div class="input-group">
+                <label for="aceleracion-fuerza">Aceleración (m/s²):</label>
+                <input type="number" id="aceleracion-fuerza" placeholder="Ingrese la aceleración">
+            </div>
+            <button class="calculate-btn" onclick="calculateFuerza()">Calcular Fuerza</button>
+            <div id="fuerza-result" class="result"></div>
+        </div>
+        
+        <!-- Masa -->
+        <div id="masa-inputs" class="formula-inputs" style="display: none;">
+            <div class="input-group">
+                <label for="fuerza-masa">Fuerza (N):</label>
+                <input type="number" id="fuerza-masa" placeholder="Ingrese la fuerza">
+            </div>
+            <div class="input-group">
+                <label for="aceleracion-masa">Aceleración (m/s²):</label>
+                <input type="number" id="aceleracion-masa" placeholder="Ingrese la aceleración">
+            </div>
+            <button class="calculate-btn" onclick="calculateMasa()">Calcular Masa</button>
+            <div id="masa-result" class="result"></div>
+        </div>
+        
+        <!-- Peso -->
+        <div id="peso-inputs" class="formula-inputs" style="display: none;">
+            <div class="input-group">
+                <label for="masa-peso">Masa (kg):</label>
+                <input type="number" id="masa-peso" placeholder="Ingrese la masa">
+            </div>
+            <div class="input-group">
+                <label for="gravedad">Gravedad (m/s²):</label>
+                <input type="number" id="gravedad" placeholder="9.81 (Tierra)" value="9.81">
+            </div>
+            <button class="calculate-btn" onclick="calculatePeso()">Calcular Peso</button>
+            <div id="peso-result" class="result"></div>
+        </div>
+        
+        <!-- Densidad -->
+        <div id="densidad-inputs" class="formula-inputs" style="display: none;">
+            <div class="input-group">
+                <label for="masa-densidad">Masa (kg):</label>
+                <input type="number" id="masa-densidad" placeholder="Ingrese la masa">
+            </div>
+            <div class="input-group">
+                <label for="volumen">Volumen (m³):</label>
+                <input type="number" id="volumen" placeholder="Ingrese el volumen">
+            </div>
+            <button class="calculate-btn" onclick="calculateDensidad()">Calcular Densidad</button>
+            <div id="densidad-result" class="result"></div>
+        </div>
+        
+        <!-- Presión -->
+        <div id="presion-inputs" class="formula-inputs" style="display: none;">
+            <div class="input-group">
+                <label for="fuerza-presion">Fuerza (N):</label>
+                <input type="number" id="fuerza-presion" placeholder="Ingrese la fuerza">
+            </div>
+            <div class="input-group">
+                <label for="area">Área (m²):</label>
+                <input type="number" id="area" placeholder="Ingrese el área">
+            </div>
+            <button class="calculate-btn" onclick="calculatePresion()">Calcular Presión</button>
+            <div id="presion-result" class="result"></div>
+        </div>
+        
+        <!-- Presión Hidrostática -->
+        <div id="presion-hidrostatica-inputs" class="formula-inputs" style="display: none;">
+            <div class="input-group">
+                <label for="densidad-ph">Densidad (kg/m³):</label>
+                <input type="number" id="densidad-ph" placeholder="Ingrese la densidad">
+            </div>
+            <div class="input-group">
+                <label for="gravedad-ph">Gravedad (m/s²):</label>
+                <input type="number" id="gravedad-ph" placeholder="9.81 (Tierra)" value="9.81">
+            </div>
+            <div class="input-group">
+                <label for="profundidad">Profundidad (m):</label>
+                <input type="number" id="profundidad" placeholder="Ingrese la profundidad">
+            </div>
+            <button class="calculate-btn" onclick="calculatePresionHidrostatica()">Calcular Presión Hidrostática</button>
+            <div id="presion-hidrostatica-result" class="result"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showSelectedFormula() {
+    // Oculta todos los formularios primero
+    document.querySelectorAll('.formula-inputs').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // Muestra el formulario seleccionado
+    const selected = document.getElementById('formula').value;
+    document.getElementById(selected + '-inputs').style.display = 'block';
+}
+
+// Funciones de cálculo para cada fórmula
+function calculateRapidez() {
+    const d = parseFloat(document.getElementById('distancia').value);
+    const t = parseFloat(document.getElementById('tiempo-rapidez').value);
+    const result = d / t;
+    document.getElementById('rapidez-result').innerHTML = `Rapidez = ${result.toFixed(2)} m/s`;
+}
+
+function calculateVelocidad() {
+    const dx = parseFloat(document.getElementById('desplazamiento').value);
+    const dt = parseFloat(document.getElementById('tiempo-velocidad').value);
+    const result = dx / dt;
+    document.getElementById('velocidad-result').innerHTML = `Velocidad = ${result.toFixed(2)} m/s`;
+}
+
+function calculateAceleracion() {
+    const dv = parseFloat(document.getElementById('cambio-velocidad').value);
+    const dt = parseFloat(document.getElementById('tiempo-aceleracion').value);
+    const result = dv / dt;
+    document.getElementById('aceleracion-result').innerHTML = `Aceleración = ${result.toFixed(2)} m/s²`;
+}
+
+function calculateFuerza() {
+    const m = parseFloat(document.getElementById('masa-fuerza').value);
+    const a = parseFloat(document.getElementById('aceleracion-fuerza').value);
+    const result = m * a;
+    document.getElementById('fuerza-result').innerHTML = `Fuerza = ${result.toFixed(2)} N`;
+}
+
+function calculateMasa() {
+    const F = parseFloat(document.getElementById('fuerza-masa').value);
+    const a = parseFloat(document.getElementById('aceleracion-masa').value);
+    const result = F / a;
+    document.getElementById('masa-result').innerHTML = `Masa = ${result.toFixed(2)} kg`;
+}
+
+function calculatePeso() {
+    const m = parseFloat(document.getElementById('masa-peso').value);
+    const g = parseFloat(document.getElementById('gravedad').value);
+    const result = m * g;
+    document.getElementById('peso-result').innerHTML = `Peso = ${result.toFixed(2)} N`;
+}
+
+function calculateDensidad() {
+    const m = parseFloat(document.getElementById('masa-densidad').value);
+    const V = parseFloat(document.getElementById('volumen').value);
+    const result = m / V;
+    document.getElementById('densidad-result').innerHTML = `Densidad = ${result.toFixed(2)} kg/m³`;
+}
+
+function calculatePresion() {
+    const F = parseFloat(document.getElementById('fuerza-presion').value);
+    const A = parseFloat(document.getElementById('area').value);
+    const result = F / A;
+    document.getElementById('presion-result').innerHTML = `Presión = ${result.toFixed(2)} Pa`;
+}
+
+function calculatePresionHidrostatica() {
+    const ρ = parseFloat(document.getElementById('densidad-ph').value);
+    const g = parseFloat(document.getElementById('gravedad-ph').value);
+    const h = parseFloat(document.getElementById('profundidad').value);
+    const result = ρ * g * h;
+    document.getElementById('presion-hidrostatica-result').innerHTML = `Presión Hidrostática = ${result.toFixed(2)} Pa`;
+}
+
+// Mostrar el primer formulario al cargar la página
+window.onload = function() {
+    showSelectedFormula();
+};
+</script>
+{% endblock %}

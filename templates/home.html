@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% set home_page = true %}
+
+{% block content %}
+<div class="hero">
+    <h1>Física Interactiva</h1>
+    <p>Explora los conceptos fundamentales de la física a través de juegos y herramientas interactivas</p>
+    <div class="options">
+        <a href="{{ url_for('games') }}" class="option-btn">Mini Juegos</a>
+        <a href="{{ url_for('calculator') }}" class="option-btn">Calculadora</a>
+    </div>
+</div>
+{% endblock %}
