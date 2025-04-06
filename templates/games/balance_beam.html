@@ -1,156 +1,9 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Equilibrio de Balanza</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
+{% extends "base.html" %}
 
-        .game-container {
-            text-align: center;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .instructions {
-            margin-bottom: 20px;
-            color: #666;
-        }
-
-        .mobile {
-            position: relative;
-            width: 300px;
-            height: 250px;
-            margin: 20px auto;
-        }
-
-        .top-wire {
-            position: absolute;
-            width: 4px;
-            height: 80px;
-            background-color: #333;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            cursor: pointer;
-            z-index: 10;
-            transition: left 0.3s ease;
-        }
-
-        .balance-beam {
-            position: absolute;
-            top: 80px;
-            width: 100%;
-            height: 4px;
-            background-color: #333;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .position-marker {
-            width: 10px;
-            height: 10px;
-            background-color: #000;
-            border-radius: 2px;
-            margin-top: -3px;
-        }
-
-        .left-wire, .right-wire {
-            position: absolute;
-            width: 4px;
-            height: 60px;
-            background-color: #333;
-            top: 84px;
-        }
-
-        .left-wire {
-            left: 30%;
-        }
-
-        .right-wire {
-            right: 30%;
-        }
-
-        .left-weight, .right-weight {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background-color: #4CAF50;
-            border-radius: 50%;
-            top: 144px;
-        }
-
-        .left-weight {
-            left: calc(30% - 18px);
-        }
-
-        .right-weight {
-            right: calc(30% - 18px);
-        }
-
-        .weight-value {
-            position: absolute;
-            top: 190px;
-            font-weight: bold;
-        }
-
-        .left-value {
-            left: calc(30% - 10px);
-        }
-
-        .right-value {
-            right: calc(30% - 10px);
-        }
-
-        .controls {
-            margin-top: 20px;
-        }
-
-        button {
-            padding: 8px 16px;
-            margin: 0 5px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .attempts {
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .message {
-            margin-top: 15px;
-            min-height: 20px;
-            font-weight: bold;
-            color: #d9534f;
-        }
-    </style>
-</head>
-<body>
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('games') }}" class="back-btn">← Volver a Mini Juegos</a>
+    
     <div class="game-container">
         <h1>Equilibra la Balanza</h1>
         <p class="instructions">Haz clic en los marcadores para mover la soga a esa posición</p>
@@ -182,94 +35,206 @@
         
         <div class="message" id="message"></div>
     </div>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const topWire = document.getElementById('topWire');
-            const checkBtn = document.getElementById('checkBtn');
-            const resetBtn = document.getElementById('resetBtn');
-            const attemptsDisplay = document.getElementById('attempts');
-            const messageDisplay = document.getElementById('message');
-            const leftWeightDisplay = document.getElementById('leftWeight');
-            const rightWeightDisplay = document.getElementById('rightWeight');
-            const markers = document.querySelectorAll('.position-marker');
-            
-            let attempts = 0;
-            let currentPosition = 4; // Posición central inicial (1-7)
-            let leftWeight = 3;
-            let rightWeight = 2;
-            let correctPosition = calculateCorrectPosition();
-            
-            // Calcular la posición correcta basada en los pesos
-            function calculateCorrectPosition() {
-                const totalWeight = leftWeight + rightWeight;
-                // Fórmula: posición = 1 + (6 * rightWeight / totalWeight)
-                // Esto distribuye las posiciones según el ratio de pesos
-                return Math.round(1 + (6 * rightWeight / totalWeight));
+</div>
+
+<style>
+    .game-container {
+        text-align: center;
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .mobile {
+        position: relative;
+        width: 300px;
+        height: 250px;
+        margin: 20px auto;
+    }
+
+    .top-wire {
+        position: absolute;
+        width: 4px;
+        height: 80px;
+        background-color: #333;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        cursor: pointer;
+        z-index: 10;
+        transition: left 0.3s ease;
+    }
+
+    .balance-beam {
+        position: absolute;
+        top: 80px;
+        width: 100%;
+        height: 4px;
+        background-color: #333;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .position-marker {
+        width: 10px;
+        height: 10px;
+        background-color: #000;
+        border-radius: 2px;
+        margin-top: -3px;
+        cursor: pointer;
+    }
+
+    .left-wire, .right-wire {
+        position: absolute;
+        width: 4px;
+        height: 60px;
+        background-color: #333;
+        top: 84px;
+    }
+
+    .left-wire {
+        left: 0%;
+    }
+
+    .right-wire {
+        right: 0%;
+    }
+
+    .left-weight, .right-weight {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background-color: #4CAF50;
+        border-radius: 50%;
+        top: 144px;
+    }
+
+    .left-weight {
+        left: -18px;
+    }
+
+    .right-weight {
+        right: -18px;
+    }
+
+    .weight-value {
+        position: absolute;
+        top: 190px;
+        font-weight: bold;
+    }
+
+    .left-value {
+        left: -10px;
+    }
+
+    .right-value {
+        right: -10px;
+    }
+
+    .controls {
+        margin-top: 20px;
+    }
+
+    .game-container button {
+        padding: 8px 16px;
+        margin: 0 5px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .game-container button:hover {
+        background-color: #45a049;
+    }
+
+    .attempts {
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .message {
+        margin-top: 15px;
+        min-height: 20px;
+        font-weight: bold;
+        color: #d9534f;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const topWire = document.getElementById('topWire');
+        const checkBtn = document.getElementById('checkBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const attemptsDisplay = document.getElementById('attempts');
+        const messageDisplay = document.getElementById('message');
+        const leftWeightDisplay = document.getElementById('leftWeight');
+        const rightWeightDisplay = document.getElementById('rightWeight');
+        const markers = document.querySelectorAll('.position-marker');
+        const balanceBeam = document.getElementById('balanceBeam');
+
+        let attempts = 0;
+        let currentPosition = 4;
+        let leftWeight = 3;
+        let rightWeight = 2;
+        let correctPosition = calculateCorrectPosition();
+
+        function calculateCorrectPosition() {
+            const totalWeight = leftWeight + rightWeight;
+            return Math.round(1 + (6 * rightWeight / totalWeight));
+        }
+
+        function initGame() {
+            attempts = 0;
+            attemptsDisplay.textContent = attempts;
+            messageDisplay.textContent = '';
+            leftWeight = Math.floor(Math.random() * 5) + 1;
+            rightWeight = Math.floor(Math.random() * 5) + 1;
+            leftWeightDisplay.textContent = leftWeight;
+            rightWeightDisplay.textContent = rightWeight;
+            correctPosition = calculateCorrectPosition();
+            currentPosition = 4;
+            updateWirePosition();
+        }
+
+        function updateWirePosition() {
+            const marker = document.querySelector(`.position-marker[data-pos="${currentPosition}"]`);
+            const markerRect = marker.getBoundingClientRect();
+            const beamRect = balanceBeam.getBoundingClientRect();
+            const offset = markerRect.left - beamRect.left + (markerRect.width / 2);
+            topWire.style.left = `${offset}px`;
+        }
+
+        function checkWin() {
+            attempts++;
+            attemptsDisplay.textContent = attempts;
+
+            if (currentPosition === correctPosition) {
+                messageDisplay.textContent = '¡Correcto! Has equilibrado la balanza.';
+                messageDisplay.style.color = '#4CAF50';
+            } else {
+                const direction = currentPosition < correctPosition ? 'derecha' : 'izquierda';
+                messageDisplay.textContent = `Incorrecto. Intenta mover la soga más a la ${direction}.`;
+                messageDisplay.style.color = '#d9534f';
             }
-            
-            // Inicializar el juego
-            function initGame() {
-                attempts = 0;
-                attemptsDisplay.textContent = attempts;
-                messageDisplay.textContent = '';
-                
-                // Generar pesos aleatorios (1-5)
-                leftWeight = Math.floor(Math.random() * 5) + 1;
-                rightWeight = Math.floor(Math.random() * 5) + 1;
-                
-                leftWeightDisplay.textContent = leftWeight;
-                rightWeightDisplay.textContent = rightWeight;
-                
-                correctPosition = calculateCorrectPosition();
-                currentPosition = 4; // Volver al centro
+        }
+
+        markers.forEach(marker => {
+            marker.addEventListener('click', function () {
+                currentPosition = parseInt(this.getAttribute('data-pos'));
                 updateWirePosition();
-            }
-            
-            // Actualizar posición del alambre
-            function updateWirePosition() {
-                const positions = [
-                    '10%',  // Posición 1 (más a la izquierda)
-                    '23%',  // Posición 2
-                    '36%',  // Posición 3
-                    '50%',  // Posición 4 (centro)
-                    '64%',  // Posición 5
-                    '77%',  // Posición 6
-                    '90%'   // Posición 7 (más a la derecha)
-                ];
-                topWire.style.left = positions[currentPosition - 1];
-            }
-            
-            // Comprobar si el jugador ganó
-            function checkWin() {
-                attempts++;
-                attemptsDisplay.textContent = attempts;
-                
-                if (currentPosition === correctPosition) {
-                    messageDisplay.textContent = '¡Correcto! Has equilibrado la balanza.';
-                    messageDisplay.style.color = '#4CAF50';
-                } else {
-                    const direction = currentPosition < correctPosition ? 'derecha' : 'izquierda';
-                    messageDisplay.textContent = `Incorrecto. Intenta mover la soga más a la ${direction}.`;
-                    messageDisplay.style.color = '#d9534f';
-                }
-            }
-            
-            // Eventos de clic en los marcadores
-            markers.forEach(marker => {
-                marker.addEventListener('click', function() {
-                    currentPosition = parseInt(this.getAttribute('data-pos'));
-                    updateWirePosition();
-                });
             });
-            
-            // Eventos de botones
-            checkBtn.addEventListener('click', checkWin);
-            resetBtn.addEventListener('click', initGame);
-            
-            // Iniciar el juego al cargar
-            initGame();
         });
-    </script>
-</body>
-</html>
+
+        checkBtn.addEventListener('click', checkWin);
+        resetBtn.addEventListener('click', initGame);
+
+        initGame();
+    });
+</script>
+{% endblock %}
