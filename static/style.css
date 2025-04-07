@@ -511,7 +511,6 @@ footer {
 }
 
 /* ================= RESPONSIVE - MÓVIL ================= */
-
 @media (max-width: 768px) {
     /* Menú hamburguesa */
     .hamburger-btn {

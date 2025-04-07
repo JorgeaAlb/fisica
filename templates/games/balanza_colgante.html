@@ -1,0 +1,686 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('games') }}" class="back-btn">← Volver a Mini Juegos</a>
+    
+    <div class="game-container">
+        <h1>Equilibra la Balanza</h1>
+        <p class="instructions">Haz clic en los marcadores para mover la soga a esa posición</p>
+        
+        <div class="difficulty-selector">
+            <button class="difficulty-btn active" data-level="easy">Fácil</button>
+            <button class="difficulty-btn" data-level="medium">Medio</button>
+            <button class="difficulty-btn" data-level="hard">Difícil</button>
+        </div>
+        
+        <div class="mobile">
+            <div class="top-wire" id="topWire"></div>
+            <div class="balance-beam" id="balanceBeam">
+                <div class="position-marker" data-pos="1"></div>
+                <div class="position-marker" data-pos="2"></div>
+                <div class="position-marker" data-pos="3"></div>
+                <div class="position-marker" data-pos="4"></div>
+                <div class="position-marker" data-pos="5"></div>
+                <div class="position-marker" data-pos="6"></div>
+                <div class="position-marker" data-pos="7"></div>
+            </div>
+            <div class="left-wire"></div>
+            <div class="right-wire"></div>
+            <div class="left-weight"></div>
+            <div class="right-weight"></div>
+            <div class="weight-value left-value" id="leftWeight">3</div>
+            <div class="weight-value right-value" id="rightWeight">2</div>
+        </div>
+        
+        <div class="controls">
+            <div class="score">Puntuación: <span id="score">0</span></div>
+            <div class="attempts">Intentos: <span id="attempts">0</span></div>
+            <div class="timer">Tiempo: <span id="timer">60</span>s</div>
+            <button id="checkBtn">Comprobar</button>
+            <button id="hintBtn">Pista</button>
+            <button id="resetBtn">Nuevo Juego</button>
+        </div>
+        
+        <div class="message" id="message"></div>
+        <div class="formula-display" id="formulaDisplay"></div>
+        
+        <div class="tutorial" id="tutorial">
+            <h3>¿Cómo jugar?</h3>
+            <p>Para equilibrar la balanza, el producto del peso por la distancia debe ser igual en ambos lados:</p>
+            <p>Peso Izquierdo × Distancia Izquierda = Peso Derecho × Distancia Derecha</p>
+            <button id="closeTutorial">Entendido</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .game-container {
+        text-align: center;
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .difficulty-selector {
+        margin: 15px 0;
+    }
+
+    .difficulty-btn {
+        padding: 5px 10px;
+        margin: 0 5px;
+        background-color: #e0e0e0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .difficulty-btn.active {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .difficulty-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .mobile {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        margin: 20px auto;
+    }
+
+    .top-wire {
+        position: absolute;
+        width: 4px;
+        height: 80px;
+        background-color: #333;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        cursor: pointer;
+        z-index: 10;
+        transition: left 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    .balance-beam {
+        position: absolute;
+        top: 80px;
+        width: 100%;
+        height: 4px;
+        background-color: #333;
+        display: flex;
+        justify-content: space-between;
+        transition: transform 0.5s ease;
+    }
+
+    .position-marker {
+        width: 10px;
+        height: 10px;
+        background-color: #000;
+        border-radius: 2px;
+        margin-top: -3px;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        z-index: 5;
+    }
+
+    .position-marker:hover {
+        transform: scale(1.5);
+        background-color: #4CAF50;
+    }
+
+    .position-marker.pulse {
+        animation: pulse 0.5s infinite;
+        background-color: #f0ad4e;
+    }
+
+    .left-wire, .right-wire {
+        position: absolute;
+        width: 4px;
+        height: 60px;
+        background-color: #333;
+        top: 84px;
+        transition: transform 0.5s ease;
+        transform-origin: top center;
+    }
+
+    .left-wire {
+        left: 0%;
+    }
+
+    .right-wire {
+        right: 0%;
+    }
+
+    .left-weight, .right-weight {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background-color: #4CAF50;
+        border-radius: 50%;
+        top: 144px;
+        transition: transform 0.5s ease;
+        transform-origin: top center;
+    }
+
+    .left-weight {
+        left: -18px;
+    }
+
+    .right-weight {
+        right: -18px;
+    }
+
+    .weight-value {
+        position: absolute;
+        top: 190px;
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .left-value {
+        left: -10px;
+    }
+
+    .right-value {
+        right: -10px;
+    }
+
+    .controls {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .controls > div {
+        margin: 0 10px;
+        font-weight: bold;
+        min-width: 80px;
+    }
+
+    .game-container button {
+        padding: 8px 16px;
+        margin: 0 5px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+
+    .game-container button:hover {
+        background-color: #45a049;
+        transform: scale(1.05);
+    }
+
+    .game-container button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    #hintBtn {
+        background-color: #f0ad4e;
+    }
+
+    #hintBtn:hover:not(:disabled) {
+        background-color: #ec971f;
+    }
+
+    #resetBtn {
+        background-color: #5bc0de;
+    }
+
+    #resetBtn:hover {
+        background-color: #46b8da;
+    }
+
+    .message {
+        margin-top: 15px;
+        min-height: 20px;
+        font-weight: bold;
+        color: #d9534f;
+        transition: all 0.3s;
+    }
+
+    .success-message {
+        color: #4CAF50 !important;
+    }
+
+    .warning-message {
+        color: #f0ad4e !important;
+    }
+
+    .formula-display {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        min-height: 40px;
+    }
+
+    .tutorial {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #e9f7ef;
+        border-radius: 5px;
+        display: none;
+    }
+
+    .tutorial h3 {
+        margin-top: 0;
+        color: #2e7d32;
+    }
+
+    #closeTutorial {
+        margin-top: 10px;
+        background-color: #5cb85c;
+    }
+
+    @keyframes tiltLeft {
+        0%, 100% { transform: rotate(0deg); }
+        50% { transform: rotate(3deg); }
+    }
+
+    @keyframes tiltRight {
+        0%, 100% { transform: rotate(0deg); }
+        50% { transform: rotate(-3deg); }
+    }
+
+    .tilt-left {
+        animation: tiltLeft 1.5s infinite;
+    }
+
+    .tilt-right {
+        animation: tiltRight 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Elementos del DOM
+        const topWire = document.getElementById('topWire');
+        const checkBtn = document.getElementById('checkBtn');
+        const hintBtn = document.getElementById('hintBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const attemptsDisplay = document.getElementById('attempts');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const messageDisplay = document.getElementById('message');
+        const formulaDisplay = document.getElementById('formulaDisplay');
+        const leftWeightDisplay = document.getElementById('leftWeight');
+        const rightWeightDisplay = document.getElementById('rightWeight');
+        const markers = document.querySelectorAll('.position-marker');
+        const balanceBeam = document.getElementById('balanceBeam');
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+        const tutorial = document.getElementById('tutorial');
+        const closeTutorial = document.getElementById('closeTutorial');
+        const leftWeightElement = document.querySelector('.left-weight');
+        const rightWeightElement = document.querySelector('.right-weight');
+        const leftWire = document.querySelector('.left-wire');
+        const rightWire = document.querySelector('.right-wire');
+
+        // Variables del juego
+        let gameState = {
+            attempts: 0,
+            score: 0,
+            timeLeft: 60,
+            timer: null,
+            currentPosition: 4,
+            leftWeight: 3,
+            rightWeight: 2,
+            correctPosition: null,
+            difficulty: 'easy',
+            hintsUsed: 0,
+            gameActive: false,
+            lastHintTime: 0
+        };
+
+        // Inicializar el juego
+        function initGame() {
+            // Limpiar temporizador anterior
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+                gameState.timer = null;
+            }
+            
+            // Reiniciar variables de estado
+            gameState.attempts = 0;
+            gameState.timeLeft = 60;
+            gameState.hintsUsed = 0;
+            gameState.gameActive = true;
+            gameState.lastHintTime = 0;
+            
+            // Actualizar displays
+            attemptsDisplay.textContent = gameState.attempts;
+            timerDisplay.textContent = gameState.timeLeft;
+            messageDisplay.textContent = '';
+            messageDisplay.className = 'message';
+            formulaDisplay.textContent = '';
+            
+            // Limpiar marcadores resaltados
+            markers.forEach(m => m.classList.remove('pulse'));
+            
+            // Habilitar botones
+            checkBtn.disabled = false;
+            hintBtn.disabled = false;
+            
+            // Generar nuevos pesos y calcular posición
+            generateWeights();
+            gameState.correctPosition = calculateCorrectPosition();
+            gameState.currentPosition = 4;
+            updateWirePosition();
+            
+            // Iniciar nuevo temporizador
+            startTimer();
+            
+            // Mostrar tutorial en el primer juego
+            if (localStorage.getItem('balanzaTutorial') !== 'seen') {
+                showTutorial();
+                localStorage.setItem('balanzaTutorial', 'seen');
+            }
+        }
+
+        function showTutorial() {
+            tutorial.style.display = 'block';
+        }
+
+        function hideTutorial() {
+            tutorial.style.display = 'none';
+        }
+
+        // Generar pesos según la dificultad
+        function generateWeights() {
+            // Asegurarnos de que haya solución exacta en un punto
+            let validWeights = false;
+            let tries = 0;
+            
+            while (!validWeights && tries < 100) {
+                tries++;
+                
+                switch(gameState.difficulty) {
+                    case 'easy':
+                        gameState.leftWeight = Math.floor(Math.random() * 5) + 1;
+                        gameState.rightWeight = Math.floor(Math.random() * 5) + 1;
+                        break;
+                    case 'medium':
+                        gameState.leftWeight = (Math.floor(Math.random() * 10) + 1) / 2;
+                        gameState.rightWeight = (Math.floor(Math.random() * 10) + 1) / 2;
+                        break;
+                    case 'hard':
+                        const fractions = [1/3, 1/2, 2/3, 3/4, 4/5, 5/6];
+                        gameState.leftWeight = fractions[Math.floor(Math.random() * fractions.length)] * (Math.floor(Math.random() * 6) + 1);
+                        gameState.rightWeight = fractions[Math.floor(Math.random() * fractions.length)] * (Math.floor(Math.random() * 6) + 1);
+                        break;
+                }
+                
+                // Verificar que tenga solución exacta en un punto
+                const tempPos = calculateCorrectPosition();
+                const leftTorque = (tempPos - 1) * gameState.leftWeight;
+                const rightTorque = (7 - tempPos) * gameState.rightWeight;
+                
+                if (Math.abs(leftTorque - rightTorque) < 0.01) {
+                    validWeights = true;
+                }
+            }
+            
+            leftWeightDisplay.textContent = formatWeight(gameState.leftWeight);
+            rightWeightDisplay.textContent = formatWeight(gameState.rightWeight);
+        }
+
+        function formatWeight(weight) {
+            return Number.isInteger(weight) ? weight : weight.toFixed(2);
+        }
+
+        // Calcular la posición correcta de equilibrio (siempre entera)
+        function calculateCorrectPosition() {
+            // Buscar la posición entera que más se acerque al equilibrio
+            let bestPos = 4;
+            let smallestDiff = Infinity;
+            
+            for (let pos = 1; pos <= 7; pos++) {
+                const leftTorque = (pos - 1) * gameState.leftWeight;
+                const rightTorque = (7 - pos) * gameState.rightWeight;
+                const diff = Math.abs(leftTorque - rightTorque);
+                
+                if (diff < smallestDiff) {
+                    smallestDiff = diff;
+                    bestPos = pos;
+                }
+            }
+            
+            return bestPos;
+        }
+
+        // Actualizar la posición visual del cable
+        function updateWirePosition() {
+            const marker = document.querySelector(`.position-marker[data-pos="${gameState.currentPosition}"]`);
+            
+            if (!marker) return;
+            
+            const markerRect = marker.getBoundingClientRect();
+            const beamRect = balanceBeam.getBoundingClientRect();
+            const offset = markerRect.left - beamRect.left + (markerRect.width / 2) - (beamRect.width / 2);
+            
+            topWire.style.left = `calc(50% + ${offset}px)`;
+            
+            // Actualizar la inclinación de la balanza
+            updateBalanceTilt();
+        }
+
+        // Actualizar la inclinación visual de la balanza según el equilibrio
+        function updateBalanceTilt() {
+            // Eliminar clases de animación anteriores
+            balanceBeam.classList.remove('tilt-left', 'tilt-right');
+            leftWeightElement.classList.remove('tilt-left', 'tilt-right');
+            rightWeightElement.classList.remove('tilt-left', 'tilt-right');
+            leftWire.classList.remove('tilt-left', 'tilt-right');
+            rightWire.classList.remove('tilt-left', 'tilt-right');
+            
+            if (!gameState.gameActive) return;
+            
+            const leftTorque = (gameState.currentPosition - 1) * gameState.leftWeight;
+            const rightTorque = (7 - gameState.currentPosition) * gameState.rightWeight;
+            
+            if (Math.abs(leftTorque - rightTorque) < 0.01) {
+                // Equilibrado - no hacer nada
+            } else if (leftTorque > rightTorque) {
+                // Inclinación hacia la izquierda
+                balanceBeam.classList.add('tilt-left');
+                leftWeightElement.classList.add('tilt-left');
+                leftWire.classList.add('tilt-left');
+            } else {
+                // Inclinación hacia la derecha
+                balanceBeam.classList.add('tilt-right');
+                rightWeightElement.classList.add('tilt-right');
+                rightWire.classList.add('tilt-right');
+            }
+        }
+
+        // Comprobar si el jugador ha ganado
+        function checkWin() {
+            if (!gameState.gameActive) {
+                messageDisplay.textContent = "El juego no está activo. Presiona 'Nuevo Juego' para comenzar.";
+                messageDisplay.classList.add('warning-message');
+                return;
+            }
+            
+            gameState.attempts++;
+            attemptsDisplay.textContent = gameState.attempts;
+            
+            if (gameState.currentPosition === gameState.correctPosition) {
+                handleWin();
+            } else {
+                handleIncorrect();
+            }
+        }
+
+        function handleWin() {
+            // Calcular puntuación
+            const attemptScore = Math.max(50 - (gameState.attempts * 5), 10);
+            const timeScore = Math.floor(gameState.timeLeft / 2);
+            const totalScore = attemptScore + timeScore - (gameState.hintsUsed * 5);
+            
+            gameState.score += totalScore;
+            scoreDisplay.textContent = gameState.score;
+            
+            // Mostrar mensaje de éxito
+            messageDisplay.textContent = `¡Correcto! Puntuación: +${totalScore}`;
+            messageDisplay.classList.add('success-message');
+            
+            // Mostrar la fórmula
+            const leftDist = gameState.currentPosition - 1;
+            const rightDist = 7 - gameState.currentPosition;
+            formulaDisplay.innerHTML = `
+                <p>Fórmula de equilibrio:</p>
+                <p>${formatWeight(gameState.leftWeight)} × ${leftDist} = ${formatWeight(gameState.rightWeight)} × ${rightDist}</p>
+                <p>${(gameState.leftWeight * leftDist).toFixed(2)} = ${(gameState.rightWeight * rightDist).toFixed(2)}</p>
+            `;
+            
+            // Finalizar el juego
+            endGame();
+        }
+
+        function handleIncorrect() {
+            // Mensaje simple basado en posición
+            if (gameState.currentPosition < gameState.correctPosition) {
+                messageDisplay.textContent = "Intenta mover el punto de apoyo a la derecha";
+            } else {
+                messageDisplay.textContent = "Intenta mover el punto de apoyo a la izquierda";
+            }
+            messageDisplay.className = 'message';
+            
+            // Efecto visual de vibración
+            balanceBeam.classList.add('pulse');
+            setTimeout(() => balanceBeam.classList.remove('pulse'), 500);
+        }
+
+        // Mostrar pista
+        function giveHint() {
+            if (!gameState.gameActive) {
+                messageDisplay.textContent = "El juego no está activo. Presiona 'Nuevo Juego' para comenzar.";
+                messageDisplay.classList.add('warning-message');
+                return;
+            }
+            
+            if (gameState.hintsUsed >= 3) {
+                messageDisplay.textContent = "Ya has usado todas las pistas disponibles (3)";
+                messageDisplay.classList.add('warning-message');
+                return;
+            }
+            
+            const now = Date.now();
+            if (now - gameState.lastHintTime < 10000) {
+                const secondsLeft = Math.ceil((10000 - (now - gameState.lastHintTime)) / 1000);
+                messageDisplay.textContent = `Espera ${secondsLeft} segundos antes de usar otra pista`;
+                messageDisplay.classList.add('warning-message');
+                return;
+            }
+            
+            gameState.hintsUsed++;
+            gameState.lastHintTime = now;
+            
+            // Resaltar el punto correcto
+            const marker = document.querySelector(`.position-marker[data-pos="${gameState.correctPosition}"]`);
+            marker.classList.add('pulse');
+            
+            messageDisplay.textContent = `Pista (${gameState.hintsUsed}/3): Coloca en el punto ${gameState.correctPosition}`;
+            messageDisplay.classList.add('warning-message');
+            
+            if (gameState.hintsUsed >= 3) {
+                hintBtn.disabled = true;
+            }
+            
+            // Quitar el resaltado después de 3 segundos
+            setTimeout(() => {
+                marker.classList.remove('pulse');
+            }, 3000);
+        }
+
+        // Iniciar temporizador
+        function startTimer() {
+            gameState.timer = setInterval(function() {
+                gameState.timeLeft--;
+                timerDisplay.textContent = gameState.timeLeft;
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame(true);
+                }
+            }, 1000);
+        }
+
+        // Finalizar el juego
+        function endGame(timeout = false) {
+            clearInterval(gameState.timer);
+            gameState.timer = null;
+            gameState.gameActive = false;
+            
+            checkBtn.disabled = true;
+            hintBtn.disabled = true;
+            
+            if (timeout) {
+                messageDisplay.textContent = "¡Tiempo terminado! El juego ha finalizado.";
+                messageDisplay.className = 'message';
+                
+                // Mostrar la solución
+                const leftDist = gameState.correctPosition - 1;
+                const rightDist = 7 - gameState.correctPosition;
+                formulaDisplay.innerHTML = `
+                    <p>Solución:</p>
+                    <p>Posición correcta: ${gameState.correctPosition}</p>
+                    <p>${formatWeight(gameState.leftWeight)} × ${leftDist} = ${formatWeight(gameState.rightWeight)} × ${rightDist}</p>
+                `;
+            }
+            
+            // Detener animaciones
+            updateBalanceTilt();
+        }
+
+        // Event listeners
+        markers.forEach(marker => {
+            marker.addEventListener('click', function() {
+                if (!gameState.gameActive) return;
+                
+                gameState.currentPosition = parseInt(this.getAttribute('data-pos'));
+                updateWirePosition();
+            });
+        });
+
+        checkBtn.addEventListener('click', checkWin);
+        hintBtn.addEventListener('click', giveHint);
+        resetBtn.addEventListener('click', initGame);
+
+        difficultyBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                difficultyBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                gameState.difficulty = this.getAttribute('data-level');
+                initGame();
+            });
+        });
+
+        closeTutorial.addEventListener('click', hideTutorial);
+
+        // Inicializar el juego al cargar
+        initGame();
+    });
+</script>
+{% endblock %}
