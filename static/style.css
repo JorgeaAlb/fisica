@@ -510,6 +510,17 @@ footer {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Ocultar menu de hamburguesa en computadora */
+@media (min-width: 768px) {
+    .hamburger-btn {
+        display: none; 
+    }
+    
+    nav ul {
+        display: flex;
+    }
+}
+
 /* ================= RESPONSIVE - MÓVIL ================= */
 @media (max-width: 768px) {
     /* Menú hamburguesa */
@@ -523,7 +534,7 @@ footer {
         margin-left: auto; /* Lo empuja a la derecha */
         padding: 0.5rem;
     }
-    
+
     /* Oculta el menú normal en móvil */
     nav ul {
         display: none;
