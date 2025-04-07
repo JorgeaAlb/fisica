@@ -2,11 +2,32 @@
 
 {% block content %}
 <div class="container">
+    <!-- Mensaje para móviles -->
+    <div id="mobile-warning" class="mobile-warning">
+        <div class="warning-content">
+            <div class="warning-icon">📱</div>
+            <h3>Experiencia optimizada para computadora</h3>
+            <p>Este juego funciona mejor en pantallas grandes. Puedes continuar en móvil, pero algunos elementos podrían no verse perfectamente.</p>
+            <button id="continue-mobile" class="btn btn-continue">Entendido, jugar igual</button>
+        </div>
+    </div>
+
     <a href="{{ url_for('games') }}" class="back-btn">← Volver a Mini Juegos</a>
     
     <div class="game-container">
         <h1>Balanza de Piso</h1>
-        <p class="instructions">Arrastra los objetos rojos al lado derecho para equilibrar la balanza</p>
+        <div class="level-selector">
+            <button class="level-btn active" data-level="1">Nivel 1</button>
+            <button class="level-btn" data-level="2">Nivel 2</button>
+            <button class="level-btn" data-level="3">Nivel 3</button>
+        </div>
+        
+        <div class="game-stats">
+            <div class="stat">Puntuación: <span id="score">0</span></div>
+            <div class="stat">Intentos: <span id="attempts">0</span>/5</div>
+        </div>
+        
+        <p class="instructions" id="levelInstruction">Arrastra los objetos rojos al lado derecho para equilibrar la balanza</p>
         
         <div class="balance-apparatus">
             <div class="balance-base"></div>
@@ -16,10 +37,7 @@
             <div class="balance-sides">
                 <div class="balance-side left-side">
                     <div class="side-label">Lado Fijo: <span id="leftTotal">10</span></div>
-                    <div class="fixed-weights">
-                        <div class="weight fixed" data-value="6">6</div>
-                        <div class="weight fixed" data-value="4">4</div>
-                    </div>
+                    <div class="fixed-weights" id="leftWeights"></div>
                 </div>
                 
                 <div class="balance-side right-side">
@@ -29,13 +47,7 @@
             </div>
         </div>
         
-        <div class="weight-pool" id="weightPool">
-            <div class="weight movable" data-value="1">1</div>
-            <div class="weight movable" data-value="2">2</div>
-            <div class="weight movable" data-value="3">3</div>
-            <div class="weight movable" data-value="4">4</div>
-            <div class="weight movable" data-value="5">5</div>
-        </div>
+        <div class="weight-pool" id="weightPool"></div>
         
         <div class="game-controls">
             <button class="btn btn-check" id="checkBtn">Comprobar</button>
@@ -52,6 +64,7 @@
         --color-secondary: #e74c3c;
         --color-success: #2ecc71;
         --color-error: #e74c3c;
+        --color-warning: #f39c12;
         --color-text: #2c3e50;
         --color-light: #ecf0f1;
         --color-dark: #34495e;
@@ -62,8 +75,67 @@
         max-width: 1000px;
         margin: 0 auto;
         padding: 20px;
+        position: relative;
     }
     
+    /* Estilos para la advertencia móvil */
+    .mobile-warning {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(3px);
+    }
+    
+    .warning-content {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 90%;
+        width: 400px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .warning-icon {
+        font-size: 50px;
+        margin-bottom: 15px;
+    }
+    
+    .warning-content h3 {
+        color: var(--color-dark);
+        margin-bottom: 10px;
+    }
+    
+    .warning-content p {
+        color: var(--color-text);
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+    
+    .btn-continue {
+        background: linear-gradient(135deg, var(--color-primary), #2980b9);
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 30px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-continue:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    /* Resto de tus estilos originales... */
     .back-btn {
         display: inline-block;
         margin-bottom: 20px;
@@ -93,6 +165,45 @@
         font-size: 28px;
         margin-bottom: 8px;
         text-align: center;
+    }
+    
+    .level-selector {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .level-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 20px;
+        background-color: var(--color-light);
+        color: var(--color-dark);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .level-btn.active {
+        background-color: var(--color-primary);
+        color: white;
+    }
+    
+    .level-btn:hover:not(.active) {
+        background-color: #d6eaf8;
+    }
+    
+    .game-stats {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 15px;
+    }
+    
+    .stat {
+        font-weight: 600;
+        color: var(--color-dark);
     }
     
     .instructions {
@@ -296,43 +407,155 @@
         display: block;
     }
     
+    .feedback-warning {
+        background-color: rgba(243, 156, 18, 0.15);
+        color: var(--color-warning);
+        display: block;
+    }
+    
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Media queries responsive */
     @media (max-width: 768px) {
-        .balance-sides {
-            flex-direction: column;
-            align-items: center;
-            bottom: 120px;
+        .mobile-warning {
+            display: flex;
         }
         
-        .balance-side {
-            width: 100%;
-            margin-bottom: 20px;
+        .container {
+            padding: 10px;
+        }
+        
+        .game-container {
+            padding: 15px;
+        }
+        
+        .game-container h1 {
+            font-size: 24px;
+        }
+        
+        .level-selector {
+            flex-wrap: wrap;
+        }
+        
+        .level-btn {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
+        .game-stats {
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .stat {
+            font-size: 14px;
+        }
+        
+        .instructions {
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .balance-apparatus {
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .balance-base {
+            width: 150px;
+        }
+        
+        .balance-pivot {
+            height: 50px;
         }
         
         .balance-beam {
-            width: 10px;
-            height: 200px;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%) rotate(0deg);
+            height: 8px;
+            bottom: 50px;
+        }
+        
+        .balance-sides {
+            flex-direction: column;
+            align-items: center;
+            bottom: 60px;
+        }
+        
+        .balance-side {
+            width: 90%;
+            margin-bottom: 15px;
+        }
+        
+        .side-label {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .fixed-weights,
+        .weights-container {
+            min-height: 70px;
+            padding: 8px;
+        }
+        
+        .weight {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
         }
         
         .weight-pool {
+            margin: 20px 0;
             padding: 15px;
+            gap: 10px;
         }
         
         .game-controls {
             flex-direction: column;
-            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
         }
         
         .btn {
-            width: 80%;
-            max-width: 250px;
+            width: 100%;
+            padding: 10px;
+            font-size: 15px;
+        }
+        
+        .game-feedback {
+            margin-top: 15px;
+            padding: 10px;
+            font-size: 14px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .warning-content {
+            padding: 20px 15px;
+            width: 90%;
+        }
+        
+        .warning-icon {
+            font-size: 40px;
+        }
+        
+        .balance-apparatus {
+            height: 350px;
+        }
+        
+        .balance-side {
+            width: 95%;
+        }
+        
+        .weight {
+            width: 35px;
+            height: 35px;
+            font-size: 14px;
+        }
+        
+        .weight-pool {
+            padding: 10px;
         }
     }
 </style>
@@ -343,36 +566,98 @@
         const balanceBeam = document.getElementById('balanceBeam');
         const leftTotalDisplay = document.getElementById('leftTotal');
         const rightTotalDisplay = document.getElementById('rightTotal');
+        const leftWeightsContainer = document.getElementById('leftWeights');
         const rightWeightsContainer = document.getElementById('rightWeights');
         const weightPool = document.getElementById('weightPool');
         const checkBtn = document.getElementById('checkBtn');
         const resetBtn = document.getElementById('resetBtn');
         const messageDisplay = document.getElementById('message');
+        const levelButtons = document.querySelectorAll('.level-btn');
+        const scoreDisplay = document.getElementById('score');
+        const attemptsDisplay = document.getElementById('attempts');
+        const levelInstruction = document.getElementById('levelInstruction');
+        const mobileWarning = document.getElementById('mobile-warning');
+        const continueBtn = document.getElementById('continue-mobile');
+        
+        // Configuración de niveles
+        const levels = {
+            1: {
+                instruction: "Arrastra los objetos rojos al lado derecho para equilibrar la balanza",
+                fixedWeights: [6, 4],
+                movableWeights: [1, 2, 3, 4, 5],
+                maxAttempts: 5,
+                points: 10
+            },
+            2: {
+                instruction: "Equilibra la balanza con pesos más variados",
+                fixedWeights: [8, 5, 3],
+                movableWeights: [2, 3, 4, 5, 6, 7],
+                maxAttempts: 4,
+                points: 20
+            },
+            3: {
+                instruction: "Nivel avanzado: usa pesos negativos para equilibrar",
+                fixedWeights: [12, 7, -3],
+                movableWeights: [-2, -1, 1, 2, 3, 4, 5, 6],
+                maxAttempts: 3,
+                points: 30
+            }
+        };
         
         // Variables del juego
-        const fixedWeights = [6, 4];
-        const movableWeights = [1, 2, 3, 4, 5];
-        let leftTotal = fixedWeights.reduce((a, b) => a + b, 0);
+        let currentLevel = 1;
+        let score = 0;
+        let attempts = 0;
+        let leftTotal = 0;
         let rightTotal = 0;
         let draggedWeight = null;
         
+        // Detectar si es móvil
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        
+        // Mostrar/ocultar advertencia móvil
+        if (isMobileDevice()) {
+            mobileWarning.style.display = 'flex';
+        } else {
+            mobileWarning.style.display = 'none';
+        }
+        
+        // Continuar en móvil
+        continueBtn.addEventListener('click', function() {
+            mobileWarning.style.display = 'none';
+        });
+        
         // Inicializar el juego
         function initGame() {
-            // Reiniciar totales
+            const level = levels[currentLevel];
+            
+            // Reiniciar contadores
+            attempts = 0;
             rightTotal = 0;
-            leftTotal = fixedWeights.reduce((a, b) => a + b, 0);
+            leftTotal = level.fixedWeights.reduce((a, b) => a + b, 0);
             
             // Actualizar displays
             leftTotalDisplay.textContent = leftTotal;
             rightTotalDisplay.textContent = rightTotal;
+            attemptsDisplay.textContent = `${attempts}/${level.maxAttempts}`;
+            levelInstruction.textContent = level.instruction;
             
-            // Reiniciar contenedor de pesos
+            // Reiniciar contenedores
+            leftWeightsContainer.innerHTML = '';
             rightWeightsContainer.innerHTML = '';
-            
-            // Reponer pesos movibles
             weightPool.innerHTML = '';
-            movableWeights.forEach(weight => {
-                const weightElement = createWeightElement(weight);
+            
+            // Crear pesos fijos
+            level.fixedWeights.forEach(weight => {
+                const weightElement = createWeightElement(weight, true);
+                leftWeightsContainer.appendChild(weightElement);
+            });
+            
+            // Crear pesos movibles
+            level.movableWeights.forEach(weight => {
+                const weightElement = createWeightElement(weight, false);
                 weightPool.appendChild(weightElement);
             });
             
@@ -388,12 +673,21 @@
         }
         
         // Crear elemento de peso
-        function createWeightElement(value) {
+        function createWeightElement(value, isFixed) {
             const weightElement = document.createElement('div');
-            weightElement.className = 'weight movable';
+            weightElement.className = isFixed ? 'weight fixed' : 'weight movable';
             weightElement.textContent = value;
             weightElement.setAttribute('data-value', value);
-            weightElement.setAttribute('draggable', 'true');
+            
+            // Colores diferentes para pesos negativos
+            if (value < 0) {
+                weightElement.style.background = 'linear-gradient(135deg, #9b59b6, #8e44ad)';
+            }
+            
+            if (!isFixed) {
+                weightElement.setAttribute('draggable', 'true');
+            }
+            
             return weightElement;
         }
         
@@ -407,20 +701,60 @@
         
         // Comprobar equilibrio
         function checkBalance() {
+            const level = levels[currentLevel];
+            attempts++;
+            attemptsDisplay.textContent = `${attempts}/${level.maxAttempts}`;
+            
             if (leftTotal === rightTotal) {
-                showFeedback('¡Perfectamente equilibrado!', true);
+                score += level.points;
+                scoreDisplay.textContent = score;
+                showFeedback(`¡Perfectamente equilibrado! +${level.points} puntos`, true);
+                setTimeout(() => {
+                    if (currentLevel < 3) {
+                        changeLevel(currentLevel + 1);
+                    } else {
+                        showFeedback(`¡Felicidades! Has completado todos los niveles con ${score} puntos`, true);
+                    }
+                }, 2000);
             } else {
-                const direction = rightTotal < leftTotal ? 'derecha' : 'izquierda';
-                showFeedback(`Necesitas más peso al lado ${direction}`, false);
+                const difference = Math.abs(leftTotal - rightTotal);
+                let feedback = '';
+                
+                if (attempts >= level.maxAttempts) {
+                    feedback = `¡Se acabaron los intentos! La solución era ${leftTotal}.`;
+                    showFeedback(feedback, false);
+                    setTimeout(() => {
+                        resetLevel();
+                    }, 2000);
+                } else {
+                    const direction = rightTotal < leftTotal ? 'derecha' : 'izquierda';
+                    
+                    if (difference <= 2) {
+                        feedback = `Muy cerca! Necesitas un poco más al lado ${direction}`;
+                        showFeedback(feedback, 'warning');
+                    } else if (difference <= 5) {
+                        feedback = `Casi! Intenta con más peso al lado ${direction}`;
+                        showFeedback(feedback, false);
+                    } else {
+                        feedback = `Sigue intentando. Más peso al lado ${direction}`;
+                        showFeedback(feedback, false);
+                    }
+                }
             }
         }
         
         // Mostrar feedback
-        function showFeedback(message, isSuccess) {
+        function showFeedback(message, type) {
             messageDisplay.textContent = message;
-            messageDisplay.className = isSuccess ? 
-                'game-feedback feedback-success' : 
-                'game-feedback feedback-error';
+            
+            if (type === true) {
+                messageDisplay.className = 'game-feedback feedback-success';
+            } else if (type === 'warning') {
+                messageDisplay.className = 'game-feedback feedback-warning';
+            } else {
+                messageDisplay.className = 'game-feedback feedback-error';
+            }
+            
             messageDisplay.style.display = 'block';
         }
         
@@ -496,9 +830,33 @@
             }
         }
         
+        // Cambiar de nivel
+        function changeLevel(newLevel) {
+            currentLevel = newLevel;
+            
+            // Actualizar botones de nivel
+            levelButtons.forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.level) === currentLevel);
+            });
+            
+            initGame();
+        }
+        
+        // Reiniciar nivel actual
+        function resetLevel() {
+            initGame();
+        }
+        
         // Event listeners
         checkBtn.addEventListener('click', checkBalance);
-        resetBtn.addEventListener('click', initGame);
+        resetBtn.addEventListener('click', resetLevel);
+        
+        // Botones de nivel
+        levelButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                changeLevel(parseInt(this.dataset.level));
+            });
+        });
         
         // Iniciar el juego
         initGame();
