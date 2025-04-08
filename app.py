@@ -26,5 +26,9 @@ def balance_beam():
 def balanza():
     return render_template('games/balanza_piso.html')
 
+@app.route('/games/tiro-al-blanco')
+def tiro():
+    return render_template('/games/tiro_al_blanco.html')
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

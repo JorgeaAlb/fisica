@@ -33,7 +33,35 @@
                 <a href="{{ url_for('balance_beam') }}" class="play-btn">Jugar</a>
             </div>
         </div>
+
+        <div class="game-card">
+            <img src="{{ url_for('static', filename='images/proximamente_diana.png') }}" alt="Tiro al blanco">
+            <div class="game-card-content">
+                <h3>Tiro al Blanco</h3>
+                <p>Apunta con precisión y da en el centro de la diana.</p>
+                <a href="{{ url_for('tiro') }}" class="play-btn">Jugar</a>
+            </div>
+        </div>
          
+        <div class="game-card">
+            <img src="{{ url_for('static', filename='images/proximamente.png') }}" alt="">
+            <div class="game-card-content">
+                <h3>PROXIMAMENTE</h3>
+                <p></p>
+                <a href="{{ url_for('games') }}" class="play-btn">Jugar</a>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <img src="{{ url_for('static', filename='images/proximamente.png') }}" alt="">
+            <div class="game-card-content">
+                <h3>PROXIMAMENTE</h3>
+                <p></p>
+                <a href="{{ url_for('games') }}" class="play-btn">Jugar</a>
+            </div>
+        </div>
+
+
     </div>
 </div>
 {% endblock %}

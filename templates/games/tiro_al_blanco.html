@@ -1,0 +1,924 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a href="{{ url_for('games') }}" class="back-btn">← Volver a Mini Juegos</a>
+<div class="game-container" id="jungle-target-game">
+    <!-- Mensaje para móviles -->
+    <div id="mobile-warning" class="mobile-warning">
+        <div class="warning-content">
+            <div class="warning-icon">📱</div>
+            <h3>Experiencia optimizada para computadora</h3>
+            <p>Este juego funciona mejor en pantallas grandes. Puedes continuar en móvil, pero algunos elementos podrían no verse perfectamente.</p>
+            <button id="continue-mobile" class="jungle-button">Entendido, jugar igual</button>
+        </div>
+    </div>
+    
+    <h2>Tiro al Blanco en la Jungla</h2>
+    <div class="level-display">Nivel: <span id="currentLevel">1</span></div>
+    
+    <div class="canvas-container">
+        <canvas id="jungleCanvas"></canvas>
+    </div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>Ángulo: <span id="angleValue">45°</span></label>
+            <input type="range" id="angle" min="10" max="80" value="45" class="slider">
+        </div>
+        <div class="control-group">
+            <label>Potencia: <span id="powerValue">50</span></label>
+            <input type="range" id="power" min="10" max="100" value="50" class="slider">
+        </div>
+        <button id="launchBtn" class="jungle-button">¡Lanzar Flecha!</button>
+        <button id="nextLevelBtn" class="jungle-button hidden">Siguiente Nivel</button>
+    </div>
+    
+    <div class="physics-info">
+        <p>Flechas usadas: <span id="shotsUsed">0</span>/<span id="maxShots">3</span></p>
+        <p>Distancia al blanco: <span id="distanceToTarget">0</span> m</p>
+    </div>
+</div>
+
+<style>
+.back-btn {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 8px 16px;
+    background-color: #f0f0f0;
+    color: #333;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.mobile-warning {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(3px);
+}
+
+.warning-content {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 90%;
+    width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.warning-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+}
+
+.warning-content h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.warning-content p {
+    color: #555;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+#jungle-target-game {
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    color: white;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    max-width: 100%;
+    margin: 0 auto;
+    font-family: 'Arial', sans-serif;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.canvas-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 10px auto;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 3px solid #333;
+}
+
+#jungleCanvas {
+    background: linear-gradient(to bottom, #56CCF2, #2F80ED);
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.control-group {
+    background: rgba(255,255,255,0.2);
+    padding: 8px;
+    border-radius: 8px;
+    min-width: 120px;
+    flex-grow: 1;
+    max-width: 200px;
+}
+
+.jungle-button {
+    background: linear-gradient(to bottom, #f46b45, #eea849);
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    flex-grow: 1;
+    max-width: 200px;
+    font-size: 14px;
+}
+
+.jungle-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.jungle-button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.slider {
+    width: 100%;
+    margin-top: 5px;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: #ddd;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #f46b45;
+    cursor: pointer;
+}
+
+.physics-info {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+    background: rgba(0,0,0,0.2);
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.level-display {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.5);
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.trajectory-line {
+    stroke: rgba(255, 255, 255, 0.5);
+    stroke-width: 2;
+    stroke-dasharray: 5, 5;
+}
+
+/* Estilos para móviles */
+@media (max-width: 600px) {
+    #jungle-target-game {
+        padding: 10px;
+    }
+    
+    .controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .control-group, .jungle-button {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .jungle-button {
+        padding: 12px;
+        font-size: 16px;
+    }
+    
+    .physics-info {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+    
+    .level-display {
+        top: 10px;
+        right: 10px;
+        font-size: 12px;
+    }
+    
+    .warning-content {
+        width: 90%;
+        padding: 20px;
+    }
+    
+    .warning-icon {
+        font-size: 40px;
+    }
+    
+    .warning-content h3 {
+        font-size: 18px;
+    }
+    
+    .warning-content p {
+        font-size: 14px;
+    }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 400px) {
+    .control-group label {
+        font-size: 14px;
+    }
+    
+    .jungle-button {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .back-btn {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+}
+</style>
+
+<script>
+// Configuración del juego
+const levels = [
+    { 
+        targetX: 0.75,
+        targetY: 0.75,
+        vines: 1, 
+        maxShots: 3, 
+        trees: [
+            {x: 0.25, width: 0.06, height: 0.45},
+            {x: 0.44, width: 0.075, height: 0.55},
+            {x: 0.63, width: 0.05, height: 0.4}
+        ]
+    },
+    { 
+        targetX: 0.81, 
+        targetY: 0.7, 
+        vines: 2, 
+        maxShots: 4, 
+        trees: [
+            {x: 0.19, width: 0.07, height: 0.5},
+            {x: 0.38, width: 0.056, height: 0.425},
+            {x: 0.56, width: 0.075, height: 0.575},
+            {x: 0.75, width: 0.062, height: 0.475}
+        ]
+    },
+    { 
+        targetX: 0.88, 
+        targetY: 0.625, 
+        vines: 3, 
+        maxShots: 5, 
+        trees: [
+            {x: 0.125, width: 0.075, height: 0.6},
+            {x: 0.31, width: 0.062, height: 0.45},
+            {x: 0.5, width: 0.07, height: 0.5},
+            {x: 0.69, width: 0.056, height: 0.425},
+            {x: 0.81, width: 0.075, height: 0.55}
+        ]
+    }
+];
+
+// Variables del juego
+let currentLevel = 0;
+let shotsUsed = 0;
+let gameActive = true;
+let animationId = null;
+let trees = [];
+let canvasWidth = 0;
+let canvasHeight = 0;
+
+// Elementos del DOM
+const canvas = document.getElementById('jungleCanvas');
+const ctx = canvas.getContext('2d');
+const angleSlider = document.getElementById('angle');
+const powerSlider = document.getElementById('power');
+const angleValue = document.getElementById('angleValue');
+const powerValue = document.getElementById('powerValue');
+const launchBtn = document.getElementById('launchBtn');
+const nextLevelBtn = document.getElementById('nextLevelBtn');
+const currentLevelDisplay = document.getElementById('currentLevel');
+const shotsUsedDisplay = document.getElementById('shotsUsed');
+const maxShotsDisplay = document.getElementById('maxShots');
+const distanceDisplay = document.getElementById('distanceToTarget');
+const mobileWarning = document.getElementById('mobile-warning');
+const continueMobileBtn = document.getElementById('continue-mobile');
+
+// Mostrar advertencia en móviles
+function checkMobile() {
+    if (/Mobi|Android/i.test(navigator.userAgent)) {
+        mobileWarning.style.display = 'flex';
+    }
+}
+
+// Ocultar advertencia y continuar
+continueMobileBtn.addEventListener('click', () => {
+    mobileWarning.style.display = 'none';
+});
+
+// Inicializar juego
+checkMobile();
+resizeCanvas();
+initLevel(currentLevel);
+
+// Event listeners
+window.addEventListener('resize', resizeCanvas);
+angleSlider.addEventListener('input', () => {
+    updateSliderValues();
+    drawScene(levels[currentLevel]);
+    drawTrajectory();
+});
+powerSlider.addEventListener('input', () => {
+    updateSliderValues();
+    drawScene(levels[currentLevel]);
+    drawTrajectory();
+});
+launchBtn.addEventListener('click', launchArrow);
+nextLevelBtn.addEventListener('click', nextLevel);
+
+// Función para redimensionar el canvas
+function resizeCanvas() {
+    const container = document.querySelector('.canvas-container');
+    canvasWidth = container.clientWidth;
+    canvasHeight = Math.floor(canvasWidth / 2);
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    
+    if (trees.length > 0) {
+        drawScene(levels[currentLevel]);
+        drawTrajectory();
+    }
+}
+
+function updateSliderValues() {
+    angleValue.textContent = angleSlider.value + '°';
+    powerValue.textContent = powerSlider.value;
+    updateDistanceDisplay();
+}
+
+function initLevel(levelIndex) {
+    shotsUsed = 0;
+    gameActive = true;
+    trees = levels[levelIndex].trees;
+    
+    updateDisplay();
+    nextLevelBtn.classList.add('hidden');
+    launchBtn.disabled = false;
+    angleSlider.disabled = false;
+    powerSlider.disabled = false;
+    
+    drawScene(levels[levelIndex]);
+    drawTrajectory();
+}
+
+function drawScene(level) {
+    if (!canvasWidth || !canvasHeight) return;
+    
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    drawJungleBackground();
+    drawVines(level);
+    drawHunter();
+}
+
+function drawJungleBackground() {
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+    gradient.addColorStop(0, '#56CCF2');
+    gradient.addColorStop(1, '#2F80ED');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    
+    const sunSize = canvasHeight * 0.125;
+    ctx.beginPath();
+    ctx.arc(canvasWidth * 0.125, canvasHeight * 0.25, sunSize, 0, Math.PI * 2);
+    const sunGradient = ctx.createRadialGradient(
+        canvasWidth * 0.125, canvasHeight * 0.25, sunSize * 0.2,
+        canvasWidth * 0.125, canvasHeight * 0.25, sunSize
+    );
+    sunGradient.addColorStop(0, '#FFEE00');
+    sunGradient.addColorStop(1, '#F9D71C');
+    ctx.fillStyle = sunGradient;
+    ctx.fill();
+    
+    ctx.strokeStyle = 'rgba(255, 238, 0, 0.6)';
+    ctx.lineWidth = canvasHeight * 0.0075;
+    for(let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI / 4);
+        ctx.beginPath();
+        ctx.moveTo(
+            canvasWidth * 0.125 + sunSize * Math.cos(angle), 
+            canvasHeight * 0.25 + sunSize * Math.sin(angle)
+        );
+        ctx.lineTo(
+            canvasWidth * 0.125 + sunSize * 1.4 * Math.cos(angle), 
+            canvasHeight * 0.25 + sunSize * 1.4 * Math.sin(angle)
+        );
+        ctx.stroke();
+    }
+    
+    trees.forEach(tree => {
+        const treeX = tree.x * canvasWidth;
+        const treeWidth = tree.width * canvasWidth;
+        const treeHeight = tree.height * canvasHeight;
+        
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(
+            treeX - treeWidth * 0.2, 
+            canvasHeight - treeHeight, 
+            treeWidth * 0.4, 
+            treeHeight
+        );
+        
+        for(let j = 0; j < 3; j++) {
+            const layerHeight = canvasHeight - treeHeight + (j * treeHeight * 0.15);
+            const layerWidth = treeWidth * (1 - j * 0.2);
+            
+            ctx.beginPath();
+            ctx.moveTo(treeX - layerWidth/2, layerHeight);
+            ctx.quadraticCurveTo(
+                treeX, 
+                layerHeight - treeHeight * 0.2 - (j * treeHeight * 0.1), 
+                treeX + layerWidth/2, 
+                layerHeight
+            );
+            ctx.closePath();
+            ctx.fillStyle = j === 2 ? '#228B22' : '#2E8B57';
+            ctx.fill();
+        }
+    });
+    
+    ctx.fillStyle = '#228B22';
+    ctx.fillRect(0, canvasHeight - canvasHeight * 0.05, canvasWidth, canvasHeight * 0.05);
+    
+    ctx.strokeStyle = '#2E8B57';
+    ctx.lineWidth = canvasHeight * 0.005;
+    for(let i = 0; i < 30; i++) {
+        const x = Math.random() * canvasWidth;
+        const height = canvasHeight * (0.025 + Math.random() * 0.0375);
+        ctx.beginPath();
+        ctx.moveTo(x, canvasHeight - canvasHeight * 0.05);
+        ctx.quadraticCurveTo(
+            x + (5 - Math.random() * 10) * (canvasWidth/800), 
+            canvasHeight - canvasHeight * 0.05 - height, 
+            x, 
+            canvasHeight - canvasHeight * 0.05
+        );
+        ctx.stroke();
+    }
+}
+
+function drawVines(level) {
+    const targetX = level.targetX * canvasWidth;
+    const targetY = level.targetY * canvasHeight;
+    const vineSpacing = canvasHeight * 0.1;
+    
+    for(let i = 0; i < level.vines; i++) {
+        const vineY = targetY - i * vineSpacing;
+        
+        ctx.strokeStyle = '#654321';
+        ctx.lineWidth = canvasHeight * 0.0075;
+        ctx.beginPath();
+        ctx.moveTo(targetX, 0);
+        
+        const segments = 10;
+        for(let s = 1; s <= segments; s++) {
+            const yPos = (vineY / segments) * s;
+            const offset = (s % 2 === 0 ? 3 : -3) * (canvasWidth/800);
+            ctx.lineTo(targetX + offset, yPos);
+        }
+        ctx.stroke();
+        
+        const targetSize = canvasHeight * 0.0375;
+        ctx.beginPath();
+        ctx.arc(targetX, vineY, targetSize, 0, Math.PI * 2);
+        const leafGradient = ctx.createRadialGradient(
+            targetX, vineY, targetSize * 0.33,
+            targetX, vineY, targetSize
+        );
+        leafGradient.addColorStop(0, '#32CD32');
+        leafGradient.addColorStop(1, '#228B22');
+        ctx.fillStyle = leafGradient;
+        ctx.fill();
+        ctx.strokeStyle = '#006400';
+        ctx.lineWidth = canvasHeight * 0.00375;
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(targetX, vineY, targetSize * 0.33, 0, Math.PI * 2);
+        ctx.fillStyle = '#FF0000';
+        ctx.fill();
+        ctx.strokeStyle = '#8B0000';
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(targetX, vineY, targetSize * 0.66, 0, Math.PI * 2);
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = canvasHeight * 0.0025;
+        ctx.stroke();
+    }
+}
+
+function drawHunter() {
+    const hunterX = canvasWidth * 0.1;
+    const hunterY = canvasHeight - canvasHeight * 0.275;
+    const hunterSize = canvasHeight * 0.0375;
+    
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(
+        hunterX - hunterSize * 1.33, 
+        canvasHeight - hunterSize * 5.33, 
+        hunterSize * 2.66, 
+        hunterSize * 4
+    );
+    
+    ctx.beginPath();
+    ctx.moveTo(hunterX - hunterSize * 1.33, canvasHeight - hunterSize * 4);
+    ctx.lineTo(hunterX - hunterSize * 2.66, canvasHeight - hunterSize * 4.66);
+    ctx.moveTo(hunterX + hunterSize * 1.33, canvasHeight - hunterSize * 4);
+    ctx.lineTo(hunterX + hunterSize * 2.66, canvasHeight - hunterSize * 4.66);
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = hunterSize * 0.53;
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.arc(hunterX, canvasHeight - hunterSize * 6, hunterSize, 0, Math.PI * 2);
+    const skinGradient = ctx.createRadialGradient(
+        hunterX - hunterSize * 0.33, 
+        canvasHeight - hunterSize * 6.33, 
+        hunterSize * 0.33,
+        hunterX, 
+        canvasHeight - hunterSize * 6, 
+        hunterSize
+    );
+    skinGradient.addColorStop(0, '#FFD700');
+    skinGradient.addColorStop(1, '#D2B48C');
+    ctx.fillStyle = skinGradient;
+    ctx.fill();
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = hunterSize * 0.133;
+    ctx.stroke();
+    
+    ctx.fillStyle = '#000';
+    ctx.fillRect(
+        hunterX - hunterSize * 0.33, 
+        canvasHeight - hunterSize * 6.33, 
+        hunterSize * 0.133, 
+        hunterSize * 0.133
+    );
+    ctx.fillRect(
+        hunterX + hunterSize * 0.2, 
+        canvasHeight - hunterSize * 6.33, 
+        hunterSize * 0.133, 
+        hunterSize * 0.133
+    );
+    
+    ctx.beginPath();
+    ctx.arc(hunterX, canvasHeight - hunterSize * 5.66, hunterSize * 0.33, 0, Math.PI);
+    ctx.stroke();
+    
+    const angle = parseInt(angleSlider.value);
+    const angleRad = angle * Math.PI / 180;
+    const bowLength = hunterSize * 2.66;
+    
+    ctx.save();
+    ctx.translate(hunterX, hunterY);
+    ctx.rotate(-angleRad);
+    
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = hunterSize * 0.266;
+    ctx.beginPath();
+    
+    const bowCurve = 0.4;
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(
+        bowLength * 0.7, -bowLength * bowCurve,
+        bowLength * 0.7, bowLength * bowCurve,
+        0, 0
+    );
+    ctx.stroke();
+    
+    if(!animationId) {
+        ctx.strokeStyle = '#FFF';
+        ctx.lineWidth = hunterSize * 0.066;
+        ctx.beginPath();
+        ctx.moveTo(0, -bowLength * bowCurve);
+        ctx.lineTo(0, bowLength * bowCurve);
+        ctx.stroke();
+    }
+    
+    ctx.restore();
+}
+
+function drawTrajectory() {
+    if(animationId || !canvasWidth || !canvasHeight) return;
+    
+    const angle = parseInt(angleSlider.value);
+    const power = parseInt(powerSlider.value);
+    const level = levels[currentLevel];
+    
+    const angleRad = angle * Math.PI / 180;
+    const velocity = power / 5 * (canvasWidth/800);
+    const vx = velocity * Math.cos(angleRad);
+    const vy = -velocity * Math.sin(angleRad);
+    
+    let x = canvasWidth * 0.1;
+    let y = canvasHeight - canvasHeight * 0.275;
+    let time = 0;
+    const gravity = 0.2 * (canvasWidth/800);
+    const steps = 100;
+    
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = canvasHeight * 0.005;
+    ctx.setLineDash([canvasHeight * 0.0125, canvasHeight * 0.0125]);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    
+    for(let i = 0; i < steps; i++) {
+        time += 0.5;
+        x += vx;
+        y += vy + gravity * time;
+        
+        ctx.lineTo(x, y);
+        
+        if(checkTreeCollision(x, y, true)) break;
+        if(x > canvasWidth || y > canvasHeight) break;
+    }
+    
+    ctx.stroke();
+    ctx.restore();
+}
+
+function launchArrow() {
+    if(!gameActive || animationId || !canvasWidth || !canvasHeight) return;
+    
+    const angle = parseInt(angleSlider.value);
+    const power = parseInt(powerSlider.value);
+    const level = levels[currentLevel];
+    
+    shotsUsed++;
+    updateDisplay();
+    
+    if(shotsUsed >= level.maxShots) {
+        gameActive = false;
+        launchBtn.disabled = true;
+    }
+    
+    const angleRad = angle * Math.PI / 180;
+    const velocity = power / 5 * (canvasWidth/800);
+    const vx = velocity * Math.cos(angleRad);
+    const vy = -velocity * Math.sin(angleRad);
+    
+    let x = canvasWidth * 0.1;
+    let y = canvasHeight - canvasHeight * 0.275;
+    let time = 0;
+    const gravity = 0.2 * (canvasWidth/800);
+    
+    angleSlider.disabled = true;
+    powerSlider.disabled = true;
+    launchBtn.disabled = true;
+    
+    function animate() {
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        drawScene(level);
+        
+        time += 0.5;
+        x += vx;
+        y += vy + gravity * time;
+        
+        drawArrow(x, y, angle);
+        
+        if(checkTreeCollision(x, y)) {
+            endShot(false);
+            return;
+        }
+        
+        if(checkTargetCollision(x, y, level)) {
+            endShot(true);
+            return;
+        }
+        
+        if(x < canvasWidth && y < canvasHeight) {
+            animationId = requestAnimationFrame(animate);
+        } else {
+            endShot(false);
+        }
+    }
+    
+    animate();
+}
+
+function drawArrow(x, y, angle) {
+    const arrowSize = canvasHeight * 0.0375;
+    
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle * Math.PI / 180);
+    
+    const arrowGradient = ctx.createLinearGradient(0, 0, arrowSize * 2, 0);
+    arrowGradient.addColorStop(0, '#D2B48C');
+    arrowGradient.addColorStop(1, '#8B4513');
+    ctx.fillStyle = arrowGradient;
+    ctx.fillRect(0, -arrowSize * 0.053, arrowSize * 2, arrowSize * 0.106);
+    
+    ctx.beginPath();
+    ctx.moveTo(arrowSize * 2, 0);
+    ctx.lineTo(arrowSize * 1.66, -arrowSize * 0.133);
+    ctx.lineTo(arrowSize * 1.66, arrowSize * 0.133);
+    ctx.closePath();
+    ctx.fillStyle = '#555';
+    ctx.fill();
+    
+    for(let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(-arrowSize * 0.133 - i*arrowSize * 0.2, -arrowSize * 0.053 + i*arrowSize * 0.04);
+        ctx.lineTo(-arrowSize * 0.4 - i*arrowSize * 0.2, -arrowSize * 0.133 + i*arrowSize * 0.04);
+        ctx.lineTo(-arrowSize * 0.4 - i*arrowSize * 0.2, 0 + i*arrowSize * 0.04);
+        ctx.closePath();
+        ctx.fillStyle = i === 0 ? '#FF0000' : i === 1 ? '#FFA500' : '#FFFF00';
+        ctx.fill();
+    }
+    
+    ctx.restore();
+}
+
+function checkTreeCollision(x, y, isTrajectory = false) {
+    for(const tree of trees) {
+        const treeX = tree.x * canvasWidth;
+        const treeWidth = tree.width * canvasWidth;
+        const treeHeight = tree.height * canvasHeight;
+        
+        if(x > treeX - treeWidth * 0.3 && x < treeX + treeWidth * 0.3 && 
+           y > canvasHeight - treeHeight && y < canvasHeight) {
+            if (!isTrajectory) {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                ctx.beginPath();
+                ctx.arc(x, y, canvasHeight * 0.025, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+function checkTargetCollision(x, y, level) {
+    const targetX = level.targetX * canvasWidth;
+    const targetY = level.targetY * canvasHeight;
+    const vineSpacing = canvasHeight * 0.1;
+    const targetSize = canvasHeight * 0.0375;
+    
+    for(let i = 0; i < level.vines; i++) {
+        const vineY = targetY - i * vineSpacing;
+        const dx = x - targetX;
+        const dy = y - vineY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if(distance < targetSize) {
+            const explosion = ctx.createRadialGradient(
+                targetX, vineY, targetSize * 0.33, 
+                targetX, vineY, targetSize * 1.5
+            );
+            explosion.addColorStop(0, '#FFD700');
+            explosion.addColorStop(0.7, '#FF8C00');
+            explosion.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            
+            ctx.fillStyle = explosion;
+            ctx.beginPath();
+            ctx.arc(targetX, vineY, targetSize * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            return true;
+        }
+    }
+    return false;
+}
+
+function endShot(hit) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+    
+    if(gameActive) {
+        angleSlider.disabled = false;
+        powerSlider.disabled = false;
+        launchBtn.disabled = false;
+    }
+    
+    if(hit) {
+        gameActive = false;
+        nextLevelBtn.classList.remove('hidden');
+        launchBtn.disabled = true;
+    } else if(shotsUsed >= levels[currentLevel].maxShots) {
+        gameActive = false;
+        launchBtn.disabled = true;
+    }
+    
+    drawScene(levels[currentLevel]);
+    drawTrajectory();
+}
+
+function updateDisplay() {
+    currentLevelDisplay.textContent = currentLevel + 1;
+    shotsUsedDisplay.textContent = shotsUsed;
+    maxShotsDisplay.textContent = levels[currentLevel].maxShots;
+    updateDistanceDisplay();
+}
+
+function updateDistanceDisplay() {
+    if (!canvasWidth || !canvasHeight) return;
+    
+    const angle = parseInt(angleSlider.value);
+    const power = parseInt(powerSlider.value);
+    const level = levels[currentLevel];
+    
+    const angleRad = angle * Math.PI / 180;
+    const velocity = power / 5 * (canvasWidth/800);
+    const vx = velocity * Math.cos(angleRad);
+    const vy = velocity * Math.sin(angleRad);
+    const targetX = level.targetX * canvasWidth;
+    const timeToTarget = (targetX - canvasWidth * 0.1) / vx;
+    const predictedY = (canvasHeight - canvasHeight * 0.275) - (vy * timeToTarget) + (0.5 * 0.2 * (canvasWidth/800) * timeToTarget * timeToTarget);
+    
+    const targetY = level.targetY * canvasHeight;
+    const vineSpacing = canvasHeight * 0.1;
+    let closestVineY = targetY;
+    let minDiff = Math.abs(predictedY - targetY);
+    
+    for(let i = 1; i < level.vines; i++) {
+        const vineY = targetY - i * vineSpacing;
+        const diff = Math.abs(predictedY - vineY);
+        if(diff < minDiff) {
+            minDiff = diff;
+            closestVineY = vineY;
+        }
+    }
+    
+    distanceDisplay.textContent = Math.floor(minDiff / (canvasHeight * 0.01));
+}
+
+function nextLevel() {
+    if(animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
+    
+    currentLevel++;
+    if(currentLevel >= levels.length) {
+        currentLevel = 0;
+        alert("¡Felicidades! Has completado todos los niveles. Comenzando de nuevo.");
+    }
+    
+    initLevel(currentLevel);
+}
+</script>
+{% endblock %}
